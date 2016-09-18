@@ -6,6 +6,8 @@
 #include <QSerialPortInfo>
 #include <QDebug>
 #include <QMessageBox>
+#include <QShortcut>
+#include <QKeySequence>
 
 namespace Ui {
 class MainWindow;
@@ -28,6 +30,12 @@ private:
     QSerialPort *serial;
     QSerialPortInfo *ports;
     bool is_connected;
+    QShortcut *sendCommand;
+    bool send_data;
+
+private slots:
+    void send_command();
+    void on_sendButton_clicked();
 };
 
 #endif // MAINWINDOW_H

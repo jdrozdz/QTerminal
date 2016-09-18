@@ -24,13 +24,36 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->_baudRate->setCurrentText("9600");
 
+    (void) new QShortcut(QKeySequence(Qt::Key_Return), this, SLOT(send_command()));
+
+    // Assign "listener" on serial port
     connect(serial, SIGNAL(readyRead()), this, SLOT(on_read_serial()));
 
+    // Assign shortcut key to send command
+    // connect(sendCommand, SIGNAL(activated()), ui->sendButton, SLOT(send_command()));
+    send_data = false;
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
+}
+
+void MainWindow::send_command(){
+    if(ui->enterEnable->isChecked() || send_data){
+        QByteArray cmd = ui->command->text().toLocal8Bit();
+        qint64 resp = serial->write(cmd);
+        if(resp == -1){
+            QMessageBox::critical(this,"Error", QString("Błąd wysłania danych na porcie %1!\n%2").arg(serial->portName()).arg(serial->errorString()));
+        }else if(resp != cmd.size()){
+            QMessageBox::critical(this, "Error", QString("Nie można wysłać wszystkich danych!\n%1").arg(serial->errorString()));
+        }else{
+            QString user_data = QString("<div style='background: silver; color: green;margin-bottom: 3px;'>%1</div>").arg(ui->command->text());
+            ui->terminal->append(user_data);
+            ui->command->setText("");
+        }
+        send_data = false;
+    }
 }
 
 void MainWindow::on_pushButton_released()
@@ -59,4 +82,10 @@ void MainWindow::on_read_serial(){
     QString data = (QString)serial->readAll();
     data.remove(QRegExp("[\n\r]"));
     ui->terminal->append(data);
+}
+
+void MainWindow::on_sendButton_clicked()
+{
+    send_data = true;
+    send_command();
 }
